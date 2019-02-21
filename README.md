@@ -1,2 +1,3 @@
 # hello-world
-just another repository
+Hello, anybody
+My name is Andrei. I'm a telecommunication enginner.
