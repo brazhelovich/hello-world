@@ -1,3 +1,5 @@
+#https://python-scripts.com/json - не плохой сайт
+
 import requests
 import json
 def test_request():
