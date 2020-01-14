@@ -1,12 +1,15 @@
 import requests
 import json
 import sys
-
+from datetime import timedelta
+from datetime import datetime
 #from easygui import passwordbox
 
 
 def get_exp_date(expire):
     message = []
+    now = (datetime.now())
+
     for link in expire:
 
         url_exp = 'http://10.6.211.178' + link + '/license'
@@ -16,28 +19,53 @@ def get_exp_date(expire):
         dec = response.content.decode('UTF-8')
         parsed_string = json.loads(dec)
         result = json.dumps(parsed_string, indent=4)
-        message.append('Name of plugin: ' + str(parsed_string['pluginKey']).split('.')[-1] + '\n' 'Expire date: ' + parsed_string['expiryDateString'] + '\n')
-        print('Name of plugin: ' + str(parsed_string['pluginKey']).split('.')[-1] + '\n' 'Expire date: ' + parsed_string['expiryDateString'] + '\n')
-    #print('\n'.join(message))
-    print('Return code: ' + str(response.status_code) + '\n')
+        form = datetime.strptime(str(parsed_string['expiryDateString']), '%d/%b/%y')
+        count_days = form - now
 
-    notify('\n'.join(message))
+        expired = 'Name of plugin: ' + str(parsed_string['pluginKey']).split('.')[-1] + '\nExpire date: ' + \
+                  parsed_string['expiryDateString'] + '\nExpired: ' + str(abs(count_days.days)) + \
+                  ' days\n===================='
+
+        remaind = 'Name of plugin: ' + str(parsed_string['pluginKey']).split('.')[-1] + '\nExpire date: ' + \
+                  parsed_string['expiryDateString'] + '\nRemained: ' + str(count_days.days) +\
+                  ' days\n===================='
+
+        #printparsed_string['expiryDateString']
+
+
+        if count_days.days < 0:
+            print(expired)
+            message.append(expired)
+
+        elif count_days.days < 8:
+            print(remaind)
+            message.append(remaind)
+            #else:
+            #print('No problem with licenses')
+
+    print('\nReturn code: ' + str(response.status_code) + '\n')
+
+    notify_telegram('\n'.join(message))
     slack_notify('\n'.join(message))
 
+
+
 def slack_notify(probe):
-
-    #probe = 'Check'
     data = {'text': probe}
-    response = requests.post('https://hooks.slack.com/services/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', json=data)
+    response = requests.post('https://hooks.slack.com/services/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', json=data)
+    print('Message sent to Slack')
 
-def notify(message):
+
+
+def notify_telegram(message):
     # !/usr/bin/env python
-
-    #message = sys.argv[1]
-
     requests.post("https://api.telegram.org/bot902068419:AAFWBpfk-S8f-Ts7XA1wQqEw3TLTMst8nNg/sendMessage",
                   data={'chat_id': -284395075, 'text': message})
+    print('Message sent to Telegram')
 #514530890
+
+
+
 def get_paid_plugins():
     list_plugins = []
     list_index = []
@@ -68,9 +96,6 @@ def get_paid_plugins():
             exp_urls.append(parsed_string['plugins'][i]['links']['delete'])
     #print(exp_urls)
     get_exp_date(exp_urls)
-
-
-
 get_paid_plugins()
 
 
